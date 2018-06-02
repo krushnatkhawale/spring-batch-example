@@ -1,5 +1,7 @@
 package play.with.integration.batch.writer;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.ExitStatus;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.StepExecutionListener;
@@ -12,15 +14,21 @@ import static java.lang.String.format;
 
 public class CustomItemWriter implements ItemWriter<Person>, StepExecutionListener {
 
-    long counter = 0;
+    private static Logger LOGGER = LoggerFactory.getLogger(CustomItemWriter.class);
 
     @Override
     public void write(List<? extends Person> items){
-        //items.forEach(System.out::print);
-        System.out.println(format("Sum of letters in each person: %s", items.stream()
-                                                                    .map(Person::getName)
-                                                                    .mapToInt(String::length)
-                                                                    .sum()));
+
+        //items.stream().map(Person::getName).forEach(LOGGER::info);
+
+        LOGGER.info(format("Sum of letters of all people in the list: %s", getSum(items)));
+    }
+
+    private long getSum(List<? extends Person> items) {
+        return items.stream()
+                .map(Person::getName)
+                .mapToInt(String::length)
+                .sum();
     }
 
     @Override

@@ -22,7 +22,7 @@ public class FileValidator {
      * @return true if file valid, false otherwise
      */
     private boolean isValid(File file) {
-        final boolean isInvalid = file.getName().startsWith("2");
+        final boolean isInvalid = file.getName().contains("test");
         if(isInvalid){
             logger.error("FileValidation failed on {}, skipping.", file.getAbsolutePath());
             return false;
