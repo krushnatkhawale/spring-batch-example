@@ -1,4 +1,4 @@
-package play.with.springboot.flow.config;
+package play.with.integration.flow.config;
 
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobParametersBuilder;

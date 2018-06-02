@@ -21,7 +21,7 @@
            http://www.springframework.org/schema/jdbc/spring-jdbc.xsd">
 
     <int:annotation-config/>
-    <context:component-scan base-package="play.with.springboot"/>
+    <context:component-scan base-package="play.with.integration"/>
 
     <int:channel id="inboundFileChannel"/>
     <int:channel id="filteredFilesChannel"/>
@@ -31,7 +31,7 @@
 
     <int-file:inbound-channel-adapter id="filePoller"
                                       channel="inboundFileChannel"
-                                      directory="file:${input.path}"
+                                      directory="file:${flow.inboundDirectory:input}"
                                       filename-pattern="*.txt">
         <int:poller fixed-rate="20000"/>
     </int-file:inbound-channel-adapter>
@@ -39,14 +39,14 @@
     <int:filter input-channel="inboundFileChannel" output-channel="filteredFilesChannel"
                 ref="filter"  discard-channel="rejectedFilesChannel"/>
 
-    <bean id="filter" class="play.with.springboot.flow.validator.FileValidator"/>
+    <bean id="filter" class="play.with.integration.flow.validator.FileValidator"/>
 
     <int-file:outbound-channel-adapter id="filteredFileProcessor" channel="rejectedFilesChannel"
-                                       directory="file:invalidFiles"/>
+                                       directory="file:${flow.filteredDirectory:filtered}"/>
 
     <int:transformer input-channel="filteredFilesChannel" output-channel="outboundJobRequestChannel">
-        <bean class="play.with.springboot.flow.config.JobRequestHelper">
-            <property name="job" ref="personJob"/>
+        <bean class="play.with.integration.flow.config.JobRequestHelper">
+            <property name="job" ref="batchJob"/>
             <property name="fileParameterName" value="input.file.name"/>
         </bean>
     </int:transformer>

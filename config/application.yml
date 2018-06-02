@@ -1,0 +1,13 @@
+spring.application.name: SpringIntegrationHelloWorld
+input.path: input
+
+flow:
+  inboundDirectory: input
+  filteredDirectory: filtered
+
+
+batch:
+  jobName: SpringBatchJob
+  stepName: StepOne
+  chunkSize: 1000
+

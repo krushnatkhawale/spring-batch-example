@@ -1,4 +1,4 @@
-package play.with.springboot.flow.validator;
+package play.with.integration.flow.validator;
 
 
 import org.slf4j.Logger;

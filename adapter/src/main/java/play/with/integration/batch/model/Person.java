@@ -1,4 +1,4 @@
-package play.with.springboot.batch.model;
+package play.with.integration.batch.model;
 
 public class Person {
 

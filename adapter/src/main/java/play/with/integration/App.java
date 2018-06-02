@@ -1,4 +1,4 @@
-package play.with.springboot;
+package play.with.integration;
 
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
 import org.springframework.boot.SpringApplication;

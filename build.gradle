@@ -17,7 +17,7 @@ buildscript {
 }
 
 allprojects {
-    group 'play.with.springboot'
+    group 'play.with.integration'
 }
 
 subprojects {

@@ -1,4 +1,4 @@
-package play.with.springboot.batch.config;
+package play.with.integration.batch.config;
 
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
@@ -16,17 +16,39 @@ import org.springframework.boot.autoconfigure.jdbc.DataSourceBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.FileSystemResource;
-import play.with.springboot.batch.model.Person;
-import play.with.springboot.batch.writer.CustomItemWriter;
+import play.with.integration.batch.listener.JobListener;
+import play.with.integration.batch.model.Person;
+import play.with.integration.batch.writer.CustomItemWriter;
 
 import javax.sql.DataSource;
-import java.io.IOException;
 
 @Configuration
 public class BatchConfiguration {
 
     @Value("${spring.application.name}")
     private String appName;
+
+    @Value("${batch.jobName:defaultJobName}")
+    private String jobName;
+
+    @Value("${batch.stepName:defaultStepName}")
+    private String stepName;
+
+    @Value("${batch.chunkSize:5}")
+    private int chunkSize;
+
+    @Value("${batch.dataSource.url:jdbc:mysql://localhost:3306/batchdb}")
+    private String url;
+
+    @Value("${batch.dataSource.driver:com.mysql.jdbc.Driver}")
+    private String driver;
+
+    @Value("${batch.dataSource.username:root}")
+    private String username;
+
+    @Value("${batch.dataSource.password:root}")
+    private String password;
+
 
     @Autowired
     public JobBuilderFactory jobBuilderFactory;
@@ -54,23 +76,37 @@ public class BatchConfiguration {
     }
 
     @Bean
-    public Job personJob(Step step1) throws IOException {
-        System.out.println(appName + " creating job");
-        return jobBuilderFactory.get("personJob").incrementer(new RunIdIncrementer()).flow(step1).end().build();
+    public JobListener jobListener() {
+        return new JobListener();
     }
 
     @Bean
-    public Step step1(ItemReader reader, CustomItemWriter writer) {
-        return stepBuilderFactory.get("step1").<Person, Person>chunk(10).reader(reader).processor(processor()).writer(writer).build();
+    public Job batchJob(Step step1, JobListener jobListener) {
+        return jobBuilderFactory.get(jobName)
+                .incrementer(new RunIdIncrementer())
+                .flow(step1)
+                .end()
+                .listener(jobListener)
+                .build();
+    }
+
+    @Bean
+    public Step step1(ItemReader reader, ItemProcessor processor, CustomItemWriter writer) {
+        return stepBuilderFactory.get(stepName)
+                .<Person, Person>chunk(chunkSize)
+                .reader(reader)
+                .processor(processor)
+                .writer(writer)
+                .build();
     }
 
     @Bean
     public DataSource dataSource() {
         return DataSourceBuilder.create()
-                .url("jdbc:mysql://localhost:3306/batchdb")
-                .driverClassName("com.mysql.jdbc.Driver")
-                .username("root")
-                .password("root")
+                .url(url)
+                .driverClassName(driver)
+                .username(username)
+                .password(password)
                 .build();
     }
 }
