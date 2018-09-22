@@ -7,7 +7,4 @@ dependencies {
     compile('org.springframework.boot:spring-boot-starter-integration')
     compile 'org.springframework.batch:spring-batch-integration'
     compile 'org.springframework.integration:spring-integration-file'
-    compile('org.springframework.boot:spring-boot-starter-jdbc')
-    compile group: 'mysql', name: 'mysql-connector-java', version: '5.1.13'
-    testCompile('org.springframework.boot:spring-boot-starter-test')
 }

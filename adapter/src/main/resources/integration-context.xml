@@ -5,7 +5,6 @@
        xmlns:batch-int="http://www.springframework.org/schema/batch-integration"
        xmlns:int-file="http://www.springframework.org/schema/integration/file"
        xmlns:context="http://www.springframework.org/schema/context"
-       xmlns:jdbc="http://www.springframework.org/schema/jdbc"
        xsi:schemaLocation="
            http://www.springframework.org/schema/beans
            http://www.springframework.org/schema/beans/spring-beans.xsd
@@ -16,9 +15,7 @@
            http://www.springframework.org/schema/integration/file
            http://www.springframework.org/schema/integration/file/spring-integration-file.xsd
            http://www.springframework.org/schema/batch-integration
-           http://www.springframework.org/schema/batch-integration/spring-batch-integration.xsd
-           http://www.springframework.org/schema/jdbc
-           http://www.springframework.org/schema/jdbc/spring-jdbc.xsd">
+           http://www.springframework.org/schema/batch-integration/spring-batch-integration.xsd">
 
     <int:annotation-config/>
     <context:component-scan base-package="play.with.integration"/>
@@ -55,8 +52,4 @@
 
     <int:logging-channel-adapter channel="jobLaunchReplyChannel"/>
 
-    <jdbc:initialize-database data-source="dataSource">
-        <jdbc:script location="org/springframework/batch/core/schema-drop-mysql.sql"/>
-        <jdbc:script location="org/springframework/batch/core/schema-mysql.sql"/>
-    </jdbc:initialize-database>
 </beans>

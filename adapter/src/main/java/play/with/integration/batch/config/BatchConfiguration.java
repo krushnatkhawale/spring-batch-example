@@ -28,27 +28,14 @@ public class BatchConfiguration {
     @Value("${spring.application.name}")
     private String appName;
 
-    @Value("${batch.jobName:defaultJobName}")
+    @Value("${batch.jobName:HelloJob}")
     private String jobName;
 
-    @Value("${batch.stepName:defaultStepName}")
+    @Value("${batch.stepName:HelloStep}")
     private String stepName;
 
     @Value("${batch.chunkSize:5}")
     private int chunkSize;
-
-    @Value("${batch.dataSource.url:jdbc:mysql://localhost:3306/batchdb}")
-    private String url;
-
-    @Value("${batch.dataSource.driver:com.mysql.jdbc.Driver}")
-    private String driver;
-
-    @Value("${batch.dataSource.username:root}")
-    private String username;
-
-    @Value("${batch.dataSource.password:root}")
-    private String password;
-
 
     @Autowired
     public JobBuilderFactory jobBuilderFactory;
@@ -97,16 +84,6 @@ public class BatchConfiguration {
                 .reader(reader)
                 .processor(processor)
                 .writer(writer)
-                .build();
-    }
-
-    @Bean
-    public DataSource dataSource() {
-        return DataSourceBuilder.create()
-                .url(url)
-                .driverClassName(driver)
-                .username(username)
-                .password(password)
                 .build();
     }
 }

@@ -1,3 +1,3 @@
-rootProject.name = 'spring-batch-subprojects'
-include 'adapter'
+rootProject.name = 'spring-batch-example'
 
+include 'adapter'

@@ -18,7 +18,11 @@ public class Person {
 
     @Override
     public String toString() {
-        return "Name: " + name;
+        return new StringBuilder()
+                .append("{ ")
+                .append("\"name\":\"")
+                .append(name)
+                .append("\" }")
+                .toString();
     }
-
 }

@@ -18,17 +18,7 @@ public class CustomItemWriter implements ItemWriter<Person>, StepExecutionListen
 
     @Override
     public void write(List<? extends Person> items){
-
-        //items.stream().map(Person::getName).forEach(LOGGER::info);
-
-        LOGGER.info(format("Sum of letters of all people in the list: %s", getSum(items)));
-    }
-
-    private long getSum(List<? extends Person> items) {
-        return items.stream()
-                .map(Person::getName)
-                .mapToInt(String::length)
-                .sum();
+        items.stream().map(Object::toString).forEach(LOGGER::info);
     }
 
     @Override
