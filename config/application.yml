@@ -3,9 +3,12 @@ spring:
     name: SpringIntegrationHelloWorld
 
 flow:
-  inboundDirectory: input
-  filteredDirectory: filtered
-
+  inboundDirectory: app-input
+  filteredDirectory: app-filtered
+  failedDirectory: app-failed
+  rejectedDirectory: app-rejected
+  processedDirectory: app-processed
+  pollingFrequency: "4000"
 batch:
   jobName: SpringBatchJob
   stepName: StepOne

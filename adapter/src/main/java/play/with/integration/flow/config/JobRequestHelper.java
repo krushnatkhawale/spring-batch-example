@@ -21,11 +21,11 @@ public class JobRequestHelper {
     }
 
     @Transformer
-    public JobLaunchRequest toRequest(Message<File> message) {
+    public JobLaunchRequest toRequest(File message) {
 
         JobParametersBuilder jobParametersBuilder = new JobParametersBuilder();
 
-        jobParametersBuilder.addString(fileParameterName, message.getPayload().getAbsolutePath());
+        jobParametersBuilder.addString(fileParameterName, message.getAbsolutePath());
 
         return new JobLaunchRequest(job, jobParametersBuilder.toJobParameters());
     }

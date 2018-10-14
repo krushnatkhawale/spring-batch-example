@@ -20,6 +20,7 @@
     <int:annotation-config/>
     <context:component-scan base-package="play.with.integration"/>
 
+    <int:channel id="signalFileChannel"/>
     <int:channel id="inboundFileChannel"/>
     <int:channel id="filteredFilesChannel"/>
     <int:channel id="rejectedFilesChannel"/>
@@ -27,16 +28,25 @@
     <int:channel id="jobLaunchReplyChannel"/>
 
     <int-file:inbound-channel-adapter id="filePoller"
-                                      channel="inboundFileChannel"
+                                      channel="signalFileChannel"
                                       directory="file:${flow.inboundDirectory:input}"
-                                      filename-pattern="*.txt">
-        <int:poller fixed-rate="20000"/>
+                                      prevent-duplicates="false"
+                                      filename-pattern="*.GO">
+        <int:poller fixed-rate="4000"/>
     </int-file:inbound-channel-adapter>
+
+    <int:filter input-channel="signalFileChannel" output-channel="signalWithInboundFileChannel">
+        <bean class="play.with.integration.flow.filter.NoInputFileSignalFileFilter"/>
+    </int:filter>
+
+    <int:transformer input-channel="signalWithInboundFileChannel" output-channel="inboundFileChannel">
+        <bean class="play.with.integration.flow.transformer.SignalToInputFileTransformer"/>
+    </int:transformer>
 
     <int:filter input-channel="inboundFileChannel" output-channel="filteredFilesChannel"
                 ref="filter"  discard-channel="rejectedFilesChannel"/>
 
-    <bean id="filter" class="play.with.integration.flow.validator.FileValidator"/>
+    <bean id="filter" class="play.with.integration.flow.filter.FileValidator"/>
 
     <int-file:outbound-channel-adapter id="filteredFileProcessor" channel="rejectedFilesChannel"
                                        directory="file:${flow.filteredDirectory:filtered}"/>
