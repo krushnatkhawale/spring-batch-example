@@ -10,14 +10,12 @@ import play.with.integration.batch.model.Person;
 
 import java.util.List;
 
-import static java.lang.String.format;
-
 public class CustomItemWriter implements ItemWriter<Person>, StepExecutionListener {
 
     private static Logger LOGGER = LoggerFactory.getLogger(CustomItemWriter.class);
 
     @Override
-    public void write(List<? extends Person> items){
+    public void write(List<? extends Person> items) {
         items.stream().map(Object::toString).forEach(LOGGER::info);
     }
 

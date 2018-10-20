@@ -25,11 +25,15 @@
     <int:channel id="filteredFilesChannel"/>
     <int:channel id="rejectedFilesChannel"/>
     <int:channel id="outboundJobRequestChannel"/>
-    <int:channel id="jobLaunchReplyChannel"/>
+    <int:channel id="jobReplyChannel"/>
+    <int:channel id="completedJobChannel"/>
+    <int:channel id="unCompletedJobChannel"/>
+    <int:channel id="completedFileChannel"/>
+    <int:channel id="unCompletedFileChannel"/>
 
     <int-file:inbound-channel-adapter id="filePoller"
                                       channel="signalFileChannel"
-                                      directory="file:${flow.inboundDirectory:input}"
+                                      directory="file:${flow.inputDirectory:app-input}"
                                       prevent-duplicates="false"
                                       filename-pattern="*.GO">
         <int:poller fixed-rate="4000"/>
@@ -44,22 +48,45 @@
     </int:transformer>
 
     <int:filter input-channel="inboundFileChannel" output-channel="filteredFilesChannel"
-                ref="filter"  discard-channel="rejectedFilesChannel"/>
+                discard-channel="rejectedFilesChannel">
+        <bean class="play.with.integration.flow.filter.FileValidator"/>
 
-    <bean id="filter" class="play.with.integration.flow.filter.FileValidator"/>
+    </int:filter>
 
-    <int-file:outbound-channel-adapter id="filteredFileProcessor" channel="rejectedFilesChannel"
-                                       directory="file:${flow.filteredDirectory:filtered}"/>
 
-    <int:transformer input-channel="filteredFilesChannel" output-channel="outboundJobRequestChannel">
+    <int:transformer input-channel="filteredFilesChannel" output-channel="jobRequestChannel">
         <bean class="play.with.integration.flow.config.JobRequestHelper">
             <property name="job" ref="batchJob"/>
             <property name="fileParameterName" value="input.file.name"/>
         </bean>
     </int:transformer>
 
-    <batch-int:job-launching-gateway request-channel="outboundJobRequestChannel" reply-channel="jobLaunchReplyChannel"/>
+    <batch-int:job-launching-gateway request-channel="jobRequestChannel" reply-channel="jobReplyChannel"/>
 
-    <int:logging-channel-adapter channel="jobLaunchReplyChannel"/>
+    <!--<int:logging-channel-adapter channel="jobReplyChannel"/>-->
+
+    <int:router id="jobStatusBasedRouter" input-channel="jobReplyChannel">
+        <bean class="play.with.integration.flow.router.JobStatusBasedRouter"/>
+    </int:router>
+
+    <int:transformer input-channel="completedJobChannel" output-channel="completedFileChannel">
+        <bean class="play.with.integration.flow.transformer.JobToFileTransformer"/>
+    </int:transformer>
+
+    <int:transformer input-channel="unCompletedJobChannel" output-channel="unCompletedFileChannel">
+        <bean class="play.with.integration.flow.transformer.JobToFileTransformer"/>
+    </int:transformer>
+
+    <int-file:outbound-channel-adapter id="completedJobProcessor" channel="completedFileChannel"
+                                       delete-source-files="true"
+                                       directory="file:${flow.processedDirectory:app-processed}"/>
+
+    <int-file:outbound-channel-adapter id="unCompletedJobProcessor" channel="unCompletedFileChannel"
+                                       delete-source-files="true"
+                                       directory="file:${flow.failedDirectory:app-failed}"/>
+
+    <int-file:outbound-channel-adapter id="filteredFileProcessor" channel="rejectedFilesChannel"
+                                       delete-source-files="true"
+                                       directory="file:${flow.filteredDirectory:app-invalid}"/>
 
 </beans>

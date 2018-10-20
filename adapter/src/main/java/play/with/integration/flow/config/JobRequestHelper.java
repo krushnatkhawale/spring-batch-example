@@ -4,7 +4,6 @@ import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobParametersBuilder;
 import org.springframework.batch.integration.launch.JobLaunchRequest;
 import org.springframework.integration.annotation.Transformer;
-import org.springframework.messaging.Message;
 
 import java.io.File;
 
@@ -21,11 +20,11 @@ public class JobRequestHelper {
     }
 
     @Transformer
-    public JobLaunchRequest toRequest(File message) {
+    public JobLaunchRequest toRequest(File inputFile) {
 
         JobParametersBuilder jobParametersBuilder = new JobParametersBuilder();
 
-        jobParametersBuilder.addString(fileParameterName, message.getAbsolutePath());
+        jobParametersBuilder.addString(fileParameterName, inputFile.getAbsolutePath());
 
         return new JobLaunchRequest(job, jobParametersBuilder.toJobParameters());
     }
