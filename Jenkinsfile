@@ -7,10 +7,14 @@ pipeline{
             }
         }
         stage('Build'){
-
+            steps{
+                sh 'This is first step'
+            }
         }
         stage('Deploy to dev'){
-
+            steps{
+                            sh 'This is first step'
+            }
         }
     }
 }
