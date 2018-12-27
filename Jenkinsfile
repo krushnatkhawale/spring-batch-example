@@ -1,7 +1,10 @@
 pipeline{
+    agent any
     stages{
         stage('Checkout code'){
+            steps{
 
+            }
         }
         stage('Build'){
 
