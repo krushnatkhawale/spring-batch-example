@@ -12,3 +12,4 @@ batch:
   jobName: SpringBatchJob
   stepName: StepOne
   chunkSize: 1000
+  endpoint: https://httpbin.org/get

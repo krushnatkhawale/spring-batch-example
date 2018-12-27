@@ -5,10 +5,11 @@ dependencyManagement{
 }
 dependencies {
     compile('org.springframework.boot:spring-boot-starter-integration')
+    compile('org.springframework.boot:spring-boot-starter-web')
     compile 'org.springframework.batch:spring-batch-integration'
     compile 'org.springframework.integration:spring-integration-file'
     compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.9.7'
     compile group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: '2.9.7'
     compile group: 'com.fasterxml.jackson.core', name: 'jackson-annotations', version: '2.9.7'
-
+    compile "org.projectlombok:lombok:1.16.8"
 }
