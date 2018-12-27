@@ -1,11 +1,13 @@
 pipeline{
-    stage('Checkout code'){
+    stages{
+        stage('Checkout code'){
 
-    }
-    stage('Build'){
+        }
+        stage('Build'){
 
-    }
-    stage('Deploy to dev'){
+        }
+        stage('Deploy to dev'){
 
+        }
     }
 }
