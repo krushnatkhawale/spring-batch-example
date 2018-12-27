@@ -1,9 +1,11 @@
-stage('Checkout code'){
+pipeline{
+    stage('Checkout code'){
 
-}
-stage('Build'){
+    }
+    stage('Build'){
 
-}
-stage('Deploy to dev'){
+    }
+    stage('Deploy to dev'){
 
+    }
 }
