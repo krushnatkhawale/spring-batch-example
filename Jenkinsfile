@@ -3,17 +3,17 @@ pipeline{
     stages{
         stage('Checkout code'){
             steps{
-                sh 'This is first step'
+                sh ''' echo 'This is first step11' '''
             }
         }
         stage('Build'){
             steps{
-                sh 'This is first step'
+                sh ''' echo 'This is first step21' '''
             }
         }
         stage('Deploy to dev'){
             steps{
-                            sh 'This is first step'
+                sh ''' echo 'This is first step31' '''
             }
         }
     }
