@@ -1,16 +1,17 @@
 package play.with.integration.batch.config;
 
-import org.springframework.batch.core.Job;
-import org.springframework.batch.core.Step;
-import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
-import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
+import org.springframework.batch.core.job.Job;
+import org.springframework.batch.core.job.builder.JobBuilder;
+import org.springframework.batch.core.job.parameters.RunIdIncrementer;
+import org.springframework.batch.core.repository.JobRepository;
+import org.springframework.batch.core.step.Step;
+import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.core.configuration.annotation.StepScope;
-import org.springframework.batch.core.launch.support.RunIdIncrementer;
-import org.springframework.batch.item.ItemProcessor;
-import org.springframework.batch.item.ItemReader;
-import org.springframework.batch.item.file.FlatFileItemReader;
-import org.springframework.batch.item.support.PassThroughItemProcessor;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.batch.infrastructure.item.ItemProcessor;
+import org.springframework.batch.infrastructure.item.ItemReader;
+import org.springframework.batch.infrastructure.item.file.FlatFileItemReader;
+import org.springframework.batch.infrastructure.item.file.builder.FlatFileItemReaderBuilder;
+import org.springframework.batch.infrastructure.item.support.PassThroughItemProcessor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -35,19 +36,14 @@ public class BatchConfiguration {
     @Value("${batch.chunkSize:5}")
     private int chunkSize;
 
-    @Autowired
-    public JobBuilderFactory jobBuilderFactory;
-
-    @Autowired
-    public StepBuilderFactory stepBuilderFactory;
-
     @Bean
     @StepScope
     public FlatFileItemReader<Person> reader(@Value("#{jobParameters['input.file.name']}") String resource) {
-        FlatFileItemReader<Person> reader = new FlatFileItemReader<>();
-        reader.setLineMapper((line, lineNumber) -> new Person(line));
-        reader.setResource(new FileSystemResource(resource));
-        return reader;
+        return new FlatFileItemReaderBuilder<Person>()
+                .name("personReader")
+                .resource(new FileSystemResource(resource))
+                .lineMapper((line, lineNumber) -> new Person(line))
+                .build();
     }
 
     @Bean
@@ -66,8 +62,8 @@ public class BatchConfiguration {
     }
 
     @Bean
-    public Job batchJob(Step step1, JobListener jobListener) {
-        return jobBuilderFactory.get(jobName)
+    public Job batchJob(JobRepository jobRepository, Step step1, JobListener jobListener) {
+        return new JobBuilder(jobName, jobRepository)
                 .incrementer(new RunIdIncrementer())
                 .flow(step1)
                 .end()
@@ -76,8 +72,9 @@ public class BatchConfiguration {
     }
 
     @Bean
-    public Step step1(ItemReader reader, ItemProcessor processor, CustomItemWriter writer) {
-        return stepBuilderFactory.get(stepName)
+    public Step step1(JobRepository jobRepository,
+                      ItemReader reader, ItemProcessor processor, CustomItemWriter writer) {
+        return new StepBuilder(stepName, jobRepository)
                 .<Person, Person>chunk(chunkSize)
                 .reader(reader)
                 .processor(processor)

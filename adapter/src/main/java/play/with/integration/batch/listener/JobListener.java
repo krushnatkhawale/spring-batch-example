@@ -2,18 +2,18 @@ package play.with.integration.batch.listener;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.batch.core.JobExecution;
-import org.springframework.batch.core.JobExecutionListener;
-import org.springframework.batch.core.JobParameters;
-import org.springframework.batch.core.StepExecution;
+import org.springframework.batch.core.job.JobExecution;
+import org.springframework.batch.core.listener.JobExecutionListener;
+import org.springframework.batch.core.job.parameters.JobParameters;
+import org.springframework.batch.core.step.StepExecution;
 import play.with.integration.batch.model.Count;
 import play.with.integration.batch.model.Report;
 import play.with.integration.batch.model.StepReport;
 import play.with.integration.batch.util.JsonUtils;
 
 import java.io.FileWriter;
+import java.time.LocalDateTime;
 import java.util.Collection;
-import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -49,14 +49,14 @@ public class JobListener implements JobExecutionListener {
         JobParameters jobParameters = jobExecution.getJobParameters();
         Collection<StepExecution> stepExecutions = jobExecution.getStepExecutions();
         String inputFilePath = jobParameters.getString("input.file.name");
-        Date startTime = jobExecution.getStartTime();
-        Date endTime = jobExecution.getEndTime();
+        LocalDateTime startTime = jobExecution.getStartTime();
+        LocalDateTime endTime = jobExecution.getEndTime();
 
-        int readCount = stepExecutions.stream().mapToInt(StepExecution::getReadCount).sum();
-        int readSkipCount = stepExecutions.stream().mapToInt(StepExecution::getReadSkipCount).sum();
-        int processSkipCount = stepExecutions.stream().mapToInt(StepExecution::getProcessSkipCount).sum();
-        int writeCount = stepExecutions.stream().mapToInt(StepExecution::getWriteCount).sum();
-        int writeSkipCount = stepExecutions.stream().mapToInt(StepExecution::getWriteSkipCount).sum();
+        long readCount = stepExecutions.stream().mapToLong(StepExecution::getReadCount).sum();
+        long readSkipCount = stepExecutions.stream().mapToLong(StepExecution::getReadSkipCount).sum();
+        long processSkipCount = stepExecutions.stream().mapToLong(StepExecution::getProcessSkipCount).sum();
+        long writeCount = stepExecutions.stream().mapToLong(StepExecution::getWriteCount).sum();
+        long writeSkipCount = stepExecutions.stream().mapToLong(StepExecution::getWriteSkipCount).sum();
 
         Report report = new Report();
         report.setFilename(getFileName(inputFilePath));

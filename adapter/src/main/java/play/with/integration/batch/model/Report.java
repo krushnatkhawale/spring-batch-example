@@ -4,15 +4,15 @@ import play.with.integration.batch.util.DateUtils;
 import play.with.integration.batch.util.JsonUtils;
 
 import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 public class Report implements Serializable {
 
     private String filename;
-    private Date startTime;
-    private Date endTime;
+    private LocalDateTime startTime;
+    private LocalDateTime endTime;
     private Count jobStats;
     private List<StepReport> steps = new ArrayList<>();
 
@@ -28,7 +28,7 @@ public class Report implements Serializable {
         return startTime.toString();
     }
 
-    public void setStartTime(Date startTime) {
+    public void setStartTime(LocalDateTime startTime) {
         this.startTime = startTime;
     }
 
@@ -36,7 +36,7 @@ public class Report implements Serializable {
         return endTime.toString();
     }
 
-    public void setEndTime(Date endTime) {
+    public void setEndTime(LocalDateTime endTime) {
         this.endTime = endTime;
     }
 

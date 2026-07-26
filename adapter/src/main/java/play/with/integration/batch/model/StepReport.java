@@ -1,6 +1,6 @@
 package play.with.integration.batch.model;
 
-import org.springframework.batch.core.StepExecution;
+import org.springframework.batch.core.step.StepExecution;
 import play.with.integration.batch.util.JsonUtils;
 
 import java.io.Serializable;

@@ -2,7 +2,7 @@ package play.with.integration.flow.transformer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.batch.core.JobExecution;
+import org.springframework.batch.core.job.JobExecution;
 
 import java.io.File;
 import java.nio.file.Paths;

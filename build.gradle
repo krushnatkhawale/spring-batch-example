@@ -1,7 +1,7 @@
 buildscript {
     ext{
-        springBootVersion = '1.5.10.RELEASE'
-        springCouldVersion = 'Dalston.RELEASE'
+        springBootVersion = '4.1.0'
+        springCouldVersion = '2025.1.0'
     }
     repositories {
         mavenLocal()
@@ -12,7 +12,7 @@ buildscript {
     }
     dependencies{
         classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
-        classpath("org.unbroken-dome.gradle-plugins:gradle-testsets-plugin:1.4.5")
+        classpath("io.spring.gradle:dependency-management-plugin:1.0.11.RELEASE")
     }
 }
 
@@ -23,15 +23,29 @@ allprojects {
 subprojects {
     apply plugin: 'java'
     apply plugin: 'idea'
-    apply plugin: 'maven'
+    apply plugin: 'maven-publish'
+    apply plugin: 'io.spring.dependency-management'
     apply plugin: 'org.springframework.boot'
 
-    sourceCompatibility = 1.8
-    targetCompatibility = 1.8
+    java {
+        sourceCompatibility = JavaVersion.VERSION_25
+        targetCompatibility = JavaVersion.VERSION_25
+    }
 
     repositories {
         mavenCentral()
     }
 
-    task listAllDependencies(type: DependencyReportTask){}
+    task listAllDependencies {
+        doLast {
+            configurations.each { config ->
+                if (config.isCanBeResolved()) {
+                    println "Dependencies for ${config.name}:"
+                    config.resolvedConfiguration.resolvedArtifacts.each { artifact ->
+                        println "  ${artifact.moduleVersion.id}"
+                    }
+                }
+            }
+        }
+    }
 }

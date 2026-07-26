@@ -4,12 +4,12 @@ dependencyManagement{
     }
 }
 dependencies {
-    compile('org.springframework.boot:spring-boot-starter-integration')
-    compile('org.springframework.boot:spring-boot-starter-web')
-    compile 'org.springframework.batch:spring-batch-integration'
-    compile 'org.springframework.integration:spring-integration-file'
-    compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.9.7'
-    compile group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: '2.9.7'
-    compile group: 'com.fasterxml.jackson.core', name: 'jackson-annotations', version: '2.9.7'
-    compile "org.projectlombok:lombok:1.16.8"
+    implementation('org.springframework.boot:spring-boot-starter-integration')
+    implementation('org.springframework.boot:spring-boot-starter-web')
+    implementation('org.springframework.boot:spring-boot-starter-batch')
+    implementation 'org.springframework.batch:spring-batch-integration'
+    implementation 'org.springframework.integration:spring-integration-file'
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
+    compileOnly "org.projectlombok:lombok:1.18.42"
+    annotationProcessor "org.projectlombok:lombok:1.18.42"
 }
