@@ -36,6 +36,10 @@ subprojects {
         mavenCentral()
     }
 
+    test {
+        useJUnitPlatform()
+    }
+
     task listAllDependencies {
         doLast {
             configurations.each { config ->
