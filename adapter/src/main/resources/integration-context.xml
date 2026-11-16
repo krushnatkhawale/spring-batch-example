@@ -36,7 +36,7 @@
                                       directory="file:${flow.inputDirectory:app-input}"
                                       prevent-duplicates="false"
                                       filename-pattern="*.GO">
-        <int:poller fixed-rate="4000"/>
+        <int:poller fixed-rate="${flow.pollingFrequency:4000}"/>
     </int-file:inbound-channel-adapter>
 
     <int:filter input-channel="signalFileChannel" output-channel="signalWithInboundFileChannel">
@@ -49,7 +49,9 @@
 
     <int:filter input-channel="inboundFileChannel" output-channel="filteredFilesChannel"
                 discard-channel="rejectedFilesChannel">
-        <bean class="play.with.integration.flow.filter.FileValidator"/>
+        <bean class="play.with.integration.flow.filter.FileValidator">
+            <property name="invalidFilenamePattern" value="${flow.invalidFilenamePattern:app-data}"/>
+        </bean>
 
     </int:filter>
 
@@ -87,6 +89,6 @@
 
     <int-file:outbound-channel-adapter id="filteredFileProcessor" channel="rejectedFilesChannel"
                                        delete-source-files="true"
-                                       directory="file:${flow.filteredDirectory:app-invalid}"/>
+                                       directory="file:${flow.invalidDirectory:app-invalid}"/>
 
 </beans>

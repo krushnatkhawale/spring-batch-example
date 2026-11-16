@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased] - 2026-11-16
+
+### Added
+- README flowchart documenting signal-file detection, filtering, batch processing, reporting, and file destinations
+- Configurable invalid filename pattern (`flow.invalidFilenamePattern`, default `app-data`)
+- End-to-end test verifying the input filename job parameter is preserved and the report is written before job completion is returned
+
+### Changed
+- Spring Integration polling interval and invalid-file destination now use the configured `flow.pollingFrequency` and `flow.invalidDirectory` properties
+- File validation now rejects filenames containing the configured invalid filename pattern
+- Job requests now include a unique `run.id` and the input file path; Spring Batch startup auto-launch is disabled
+- README now documents input signal naming, processing behavior, output directories, and configuration
+
+### Fixed
+- Removed the job incrementer that caused Spring Batch to discard supplied job parameters
+- Corrected job-status routing to return channel names rather than `MessageChannel.toString()`
+- Fixed report filename extraction for Unix-style paths and made report-writing failures visible
+
+---
+
 ## [4.1.0] - 2026-07-26
 
 ### Added

@@ -1,10 +1,14 @@
 spring:
   application:
     name: SpringIntegrationHelloWorld
+  batch:
+    job:
+      enabled: false
 
 flow:
   pollingFrequency: "4000"
   inputDirectory: app-input
+  invalidFilenamePattern: app-data
   failedDirectory: app-failed
   invalidDirectory: app-invalid
   processedDirectory: app-processed

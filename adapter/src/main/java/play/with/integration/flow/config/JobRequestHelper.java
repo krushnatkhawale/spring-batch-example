@@ -25,6 +25,7 @@ public class JobRequestHelper {
         JobParametersBuilder jobParametersBuilder = new JobParametersBuilder();
 
         jobParametersBuilder.addString(fileParameterName, inputFile.getAbsolutePath());
+        jobParametersBuilder.addLong("run.id", System.currentTimeMillis());
 
         return new JobLaunchRequest(job, jobParametersBuilder.toJobParameters());
     }
