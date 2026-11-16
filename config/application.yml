@@ -6,7 +6,7 @@ spring:
       enabled: false
 
 flow:
-  pollingFrequency: "4000"
+  pollingFrequency: "30000"
   inputDirectory: app-input
   invalidFilenamePattern: app-data
   failedDirectory: app-failed

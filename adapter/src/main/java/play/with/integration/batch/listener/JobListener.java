@@ -44,7 +44,7 @@ public class JobListener implements JobExecutionListener {
         String filename = report.getFilename();
         int extensionIndex = filename.lastIndexOf('.');
         String reportBaseName = extensionIndex > 0 ? filename.substring(0, extensionIndex) : filename;
-        Path reportPath = Path.of(String.format("Report-%s.json", reportBaseName));
+        Path reportPath = Path.of(String.format("report-%s.json", reportBaseName));
         try {
             Files.writeString(reportPath, JsonUtils.toString(report));
         } catch (IOException e) {

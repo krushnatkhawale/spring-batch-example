@@ -1,5 +1,6 @@
 package play.with.integration.batch.util;
 
+import lombok.extern.slf4j.Slf4j;
 import play.with.integration.batch.model.Person;
 import play.with.integration.batch.model.Response;
 
@@ -15,6 +16,7 @@ import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toList;
 
+@Slf4j
 public class ConcurrentUtil {
 
     public static List<Response> postAndGetResponseList(Stream<? extends Person> peopleStream, Function<String, Response> mapper) {
@@ -28,10 +30,10 @@ public class ConcurrentUtil {
             forkJoinPool.shutdown();
             forkJoinPool.awaitTermination(3, TimeUnit.SECONDS);
             Duration duration = Duration.between(start, Instant.now());
-            System.out.println(String.format("W:-- %s -- %s:%s -- %s", Thread.currentThread(), duration.toMinutes(), duration.getSeconds(), responseList.size()));
+            log.info("Thread - {}, duration- {}:{}, responses - {}", Thread.currentThread(), duration.toMinutes(), duration.getSeconds(), responseList.size());
             return responseList;
         } catch (InterruptedException | ExecutionException e) {
-            e.printStackTrace();
+            log.error("Error occurred while processing people stream", e);
         }
         return Collections.emptyList();
     }
