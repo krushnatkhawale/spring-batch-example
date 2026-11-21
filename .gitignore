@@ -2,6 +2,7 @@
 /.gradle
 /build/
 /adapter/build/
+/springai-batch-metadata-client/build/
 !gradle/wrapper/gradle-wrapper.jar
 
 ### STS ###

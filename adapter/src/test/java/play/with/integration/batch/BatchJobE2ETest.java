@@ -13,8 +13,11 @@ import org.springframework.batch.integration.launch.JobLaunchRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.ResponseEntity;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 import play.with.integration.flow.config.JobRequestHelper;
 
@@ -29,6 +32,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @SpringBootTest(classes = TestApplication.class)
+@ActiveProfiles("test")
 @TestPropertySource(properties = {
         "spring.application.name=batch-e2e-test",
         "batch.jobName=e2eTestJob",
@@ -44,6 +48,9 @@ class BatchJobE2ETest {
 
     @Autowired
     private JobOperator jobOperator;
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
     @MockitoBean
     private RestTemplate restTemplate;
@@ -70,6 +77,9 @@ class BatchJobE2ETest {
 
             assertEquals(BatchStatus.COMPLETED, execution.getStatus());
             assertEquals(ExitStatus.COMPLETED, execution.getExitStatus());
+            assertTrue(jdbcTemplate.queryForObject(
+                    "SELECT COUNT(*) FROM BATCH_JOB_INSTANCE WHERE JOB_NAME = ?",
+                    Integer.class, batchJob.getName()) > 0);
 
             var stepExecutions = execution.getStepExecutions().iterator().next();
             assertEquals(3, stepExecutions.getReadCount());
@@ -100,6 +110,30 @@ class BatchJobE2ETest {
             var stepExecutions = execution.getStepExecutions().iterator().next();
             assertEquals(1, stepExecutions.getReadCount());
             assertEquals(1, stepExecutions.getWriteCount());
+        } finally {
+            Files.deleteIfExists(tempFile.toPath());
+        }
+    }
+
+    @Test
+    void shouldFailJobWhenEndpointRequestFails() throws Exception {
+        when(restTemplate.getForEntity(anyString(), eq(String.class)))
+                .thenThrow(new ResourceAccessException("Connection refused"));
+
+        File tempFile = createTempInputFile("Alice");
+
+        try {
+            JobParameters params = new JobParametersBuilder()
+                    .addString("input.file.name", tempFile.getAbsolutePath())
+                    .addLong("run.id", System.currentTimeMillis())
+                    .toJobParameters();
+
+            JobExecution execution = jobOperator.start(batchJob, params);
+
+            assertEquals(BatchStatus.FAILED, execution.getStatus());
+            assertEquals(ExitStatus.FAILED.getExitCode(), execution.getExitStatus().getExitCode());
+            assertTrue(execution.getStepExecutions().iterator().next().getFailureExceptions().stream()
+                    .anyMatch(exception -> hasCause(exception, ResourceAccessException.class)));
         } finally {
             Files.deleteIfExists(tempFile.toPath());
         }
@@ -154,5 +188,14 @@ class BatchJobE2ETest {
     private Path reportFileFor(File inputFile) {
         String filename = inputFile.getName();
         return Path.of("Report-" + filename.substring(0, filename.lastIndexOf('.')) + ".json");
+    }
+
+    private boolean hasCause(Throwable throwable, Class<? extends Throwable> causeType) {
+        for (Throwable cause = throwable; cause != null; cause = cause.getCause()) {
+            if (causeType.isInstance(cause)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

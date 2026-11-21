@@ -2,6 +2,31 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased] - 2026-11-17
+
+### Added
+- `springai-batch-metadata-client` Gradle module with an Ollama-backed Spring AI REST endpoint and read-only Spring Batch metadata tools
+- Thymeleaf question form at `/` in the metadata client module
+- Per-day completed/unsuccessful job summaries, record read/write totals, and capped per-file execution details
+- H2-backed tests for metadata summary queries
+- PostgreSQL as the default JDBC-backed Spring Batch metadata store, configurable with `DB_URL`, `DB_USERNAME`, and `DB_PASSWORD`
+- `scripts/start-postgres.sh` to create/start the persistent `spring-batch-db` PostgreSQL container
+- macOS Docker Desktop CLI discovery in the PostgreSQL startup script when `docker` is not on `PATH`
+- H2 `memory` profile for running the main application without PostgreSQL
+- H2 `test` profile for batch end-to-end tests, with a check that metadata is stored through JDBC
+- Idempotent PostgreSQL initialization script for Spring Batch metadata tables and sequences
+
+### Changed
+- Enabled Spring Batch's JDBC job repository and added JDBC, PostgreSQL, and H2 dependencies
+- Shared question validation and AI tool invocation between the Thymeleaf UI and JSON REST endpoint
+- Main-profile database defaults now match the local Docker container (`springbatch` database/user)
+- README documents PostgreSQL setup, memory profile, and in-memory test database
+
+### Fixed
+- Made the batch metadata schema script optional so the metadata client can start without packaging the batch app's schema resource
+
+---
+
 ## [Unreleased] - 2026-11-16
 
 ### Added

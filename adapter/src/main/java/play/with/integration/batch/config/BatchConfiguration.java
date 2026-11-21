@@ -2,6 +2,8 @@ package play.with.integration.batch.config;
 
 import org.springframework.batch.core.job.Job;
 import org.springframework.batch.core.job.builder.JobBuilder;
+import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
+import org.springframework.batch.core.configuration.annotation.EnableJdbcJobRepository;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.Step;
 import org.springframework.batch.core.step.builder.StepBuilder;
@@ -21,6 +23,8 @@ import play.with.integration.batch.model.Person;
 import play.with.integration.batch.writer.CustomItemWriter;
 
 @Configuration
+@EnableBatchProcessing
+@EnableJdbcJobRepository
 public class BatchConfiguration {
 
     @Value("${spring.application.name}")

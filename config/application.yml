@@ -1,9 +1,18 @@
 spring:
   application:
     name: SpringIntegrationHelloWorld
+  datasource:
+    url: ${SBDB_URL:jdbc:postgresql://localhost:5432/springbatch}
+    username: ${SBDB_USERNAME:springbatch}
+    password: ${SBDB_PASSWORD:springbatch}
+    driver-class-name: org.postgresql.Driver
   batch:
     job:
       enabled: false
+  sql:
+    init:
+      mode: always
+      schema-locations: optional:classpath:batch-schema-postgresql.sql
 
 flow:
   pollingFrequency: "30000"

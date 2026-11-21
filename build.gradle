@@ -16,6 +16,15 @@ buildscript {
     }
 }
 
+plugins {
+    id 'java'
+    id 'io.github.krushnatkhawale.blogify' version '0.1.0'
+}
+
+blogify {
+    siteTitle = 'SpringBatch'
+}
+
 allprojects {
     group 'play.with.integration'
 }

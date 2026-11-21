@@ -1,7 +1,6 @@
 package play.with.integration.batch.writer;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.ExitStatus;
 import org.springframework.batch.core.step.StepExecution;
 import org.springframework.batch.core.listener.StepExecutionListener;
@@ -19,9 +18,9 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.concurrent.ExecutionException;
 
+@Slf4j
 public class CustomItemWriter implements ItemWriter<Person>, StepExecutionListener {
 
-    private static Logger LOGGER = LoggerFactory.getLogger(CustomItemWriter.class);
     @Autowired
     RestTemplate restTemplate;
 
@@ -30,7 +29,9 @@ public class CustomItemWriter implements ItemWriter<Person>, StepExecutionListen
 
     @Override
     public void write(Chunk<? extends Person> chunk) throws ExecutionException, InterruptedException {
-        ConcurrentUtil.postAndGetResponseList(chunk.getItems().parallelStream(), this::httpAction);
+        ConcurrentUtil
+                .postAndGetResponseList(chunk.getItems().parallelStream(), this::httpAction)
+                .forEach(response -> log.info("Response - {}", response));
     }
 
     @Override
