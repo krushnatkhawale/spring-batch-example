@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: springai-batch-metadata-client
+  datasource:
+    url: ${SBDB_URL:jdbc:postgresql://localhost:5432/springbatch}
+    username: ${SBDB_USERNAME:springbatch}
+    password: ${SBDB_PASSWORD:springbatch}
+    driver-class-name: org.postgresql.Driver
+  ai:
+    ollama:
+      base-url: ${OLLAMA_BASE_URL:http://localhost:11434}
+      chat:
+        model: ${OLLAMA_MODEL:qwen3.6:35b}
+
+server:
+  port: ${SERVER_PORT:8081}
