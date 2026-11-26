@@ -1,0 +1,16 @@
+# adapter
+
+> Curated technical articles and architecture specifications generated directly from codebase and documentation.
+
+## Available Guides
+
+- [Automating File Ingestion and Lifecycle Management with Spring Integration and Spring Batch](index.html): How Spring Integration complements Spring Batch in the adapter module by managing signal-based file polling, pre-execution validation, JobLaunchingGateway triggers, and post-batch archiving. (Version: 0.1.0)
+
+## Architectural Takeaways
+
+### Automating File Ingestion and Lifecycle Management with Spring Integration and Spring Batch
+- Eliminate partial-read race conditions: Polling for companion signal files (*.GO) ensures large files are completely written before the batch job starts.
+- Filter corrupt files before batch submission: Discarding invalid files prior to launching avoids creating unnecessary JobExecution and StepExecution records in the database.
+- Bridge file flows to batch jobs seamlessly: Use JobLaunchingGateway and JobRequestHelper to dynamically inject file paths and unique run timestamps into JobParameters.
+- Automate post-batch file movement: Route files based on JobExecution status to processed or failed directories without custom shell scripts or manual steps.
+

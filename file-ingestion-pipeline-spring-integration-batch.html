@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="primer" data-mode="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Automating File Ingestion and Lifecycle Management with Spring Integration and Spring Batch - adapter</title>
+  <link rel="stylesheet" href="style.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "headline": "Automating File Ingestion and Lifecycle Management with Spring Integration and Spring Batch",
+    "description": "How Spring Integration complements Spring Batch in the adapter module by managing signal-based file polling, pre-execution validation, JobLaunchingGateway triggers, and post-batch archiving.",
+    "author": { "@type": "Person", "name": "Krushna Khawale" },
+    "datePublished": "2026-11-27",
+    "version": "0.1.0",
+    "publisher": { "@type": "Organization", "name": "adapter" }
+  }
+  </script>
+  <script>
+    (function() {
+      var savedTheme = localStorage.getItem('blogify-theme') || 'primer';
+      var savedMode = localStorage.getItem('blogify-mode') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', savedTheme);
+      document.documentElement.setAttribute('data-mode', savedMode);
+    })();
+  </script>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: true, theme: 'default' });
+  </script>
+</head>
+<body>
+  <header>
+    <div class="header-container">
+      <a href="https://krushnatkhawale.github.io/#/blogs" class="brand-title">⚡ adapter <span class="badge-compile-time">COMPILED</span></a>
+      <div class="header-actions">
+        <nav class="nav-links">
+          <a href="https://krushnatkhawale.github.io/#/blogs">← Back to Blogs</a>
+          <a href="llms.txt" class="nav-ai-link" title="AI Discoverability Feed">AI llms.txt</a>
+        </nav>
+        <div class="theme-controls">
+          <select id="theme-select" class="theme-dropdown" aria-label="Theme Switcher" onchange="switchBlogTheme(this.value)">
+            <option value="primer">Primer</option>
+            <option value="editorial">Editorial</option>
+            <option value="minimal">Minimal</option>
+          </select>
+          <button id="mode-toggle-btn" class="mode-btn" aria-label="Toggle Light/Dark Mode" onclick="toggleColorMode()" title="Toggle dark/light mode">🌓</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <article>
+    <div class="breadcrumb"><a href="https://krushnatkhawale.github.io/#/blogs">← Back to Blogs</a></div>
+    <h1>Automating File Ingestion and Lifecycle Management with Spring Integration and Spring Batch</h1>
+
+    <div class="post-meta-bar">
+      <span>✍️ <strong>Krushna Khawale</strong></span>
+      <span>📅 2026-11-27</span>
+      <span class="source-version-badge">📦 Source: <strong>0.1.0</strong> · <a href="https://github.com/krushnatkhawale/blogify/commit/2fd2d9b" target="_blank" rel="noopener" class="commit-link">commit 2fd2d9b ↗</a></span>
+      <div class="tags-container">
+        <span class="tag">#Spring Integration</span>
+        <span class="tag">#Spring Batch</span>
+        <span class="tag">#File Processing</span>
+        <span class="tag">#Enterprise Integration Patterns</span>
+        <span class="tag">#Java</span>
+      </div>
+    </div>
+
+    <div class="callout callout-problem">
+      <div class="callout-header">⚠️ The Problem</div>
+      <div class="callout-body">
+        <p>Spring Batch excels at chunk-oriented data processing and transaction checkpoints, but it is strictly an execution engine. It cannot natively detect when an upstream producer has finished writing a file to disk, validate filenames prior to database record creation, or move files to archive and quarantine folders based on job results. Relying on basic cron jobs or custom file watchers introduces race conditions on partially written files, pollutes JobRepository tables with failed executions from invalid files, and leaves files stranded in input folders.</p>
+      </div>
+    </div>
+
+    <div class="callout callout-insight">
+      <div class="callout-header">💡 The Core Insight</div>
+      <div class="callout-body">
+        <p>Spring Integration solves file orchestration by wrapping Spring Batch in an automated ingestion pipeline. Using Spring Integration File adapters and Enterprise Integration Patterns (EIP), the adapter module implements: a two-phase signal file (.GO) handshake to guarantee write completion, pre-launch filtering to isolate invalid files in app-invalid/ before touching the database, a JobLaunchingGateway to dispatch dynamic JobParameters, and a status-based router that moves finished files to app-processed/ or failed files to app-failed/.</p>
+      </div>
+    </div>
+
+    <div class="diagram-card">
+      <div class="diagram-header">📐 Architecture Workflow</div>
+      <div class="mermaid">
+flowchart TD
+subgraph Inbound ["1. File Polling & Signal Handshake"]
+A["filePoller: Poll app-input for *.GO"] --> B{"NoInputFileSignalFileFilter:<br/>Companion data file exists?"}
+B -- Yes --> C["SignalToInputFileTransformer:<br/>Delete .GO & forward data File"]
+B -- No --> B_Drop["Delete orphan .GO file"]
+end
+
+subgraph Validation ["2. Pre-Execution Validation"]
+C --> D{"FileValidator:<br/>Filename matches valid pattern?"}
+D -- Invalid --> E["filteredFileProcessor:<br/>Move file to app-invalid/"]
+end
+
+subgraph Launch ["3. Job Launching Gateway"]
+D -- Valid --> F["JobRequestHelper:<br/>Build JobLaunchRequest (file path + run.id)"]
+F --> G["batch-int:job-launching-gateway"]
+G --> H["Spring Batch Engine:<br/>Execute Chunk Step (Reader -> Processor -> Writer)"]
+H --> I["JobListener:<br/>Generate JSON Report & return JobExecution"]
+end
+
+subgraph Lifecycle ["4. Post-Execution Status Routing"]
+I --> J{"JobStatusBasedRouter:<br/>Inspect JobExecution.getStatus()"}
+J -- COMPLETED --> K["completedJobProcessor:<br/>Move file to app-processed/"]
+J -- FAILED --> L["unCompletedJobProcessor:<br/>Move file to app-failed/"]
+end
+</div>
+    </div>
+
+    <h2>Why Pair Spring Integration with Spring Batch?</h2>
+
+    <p>Spring Batch is the standard for chunk-oriented batch processing in Java. It excels at:</p>
+    <ul class="md-ul">
+      <li class="md-li">Chunk-based commits (<code>ItemReader</code>, <code>ItemProcessor</code>, <code>ItemWriter</code>).</li>
+      <li class="md-li">Skip, retry, and fault tolerance policies.</li>
+      <li class="md-li">Execution tracking and checkpoint restartability via <code>JobRepository</code>.</li>
+    </ul>
+
+    <p>However, Spring Batch is <strong>passive</strong>: it requires an external trigger and assumes that the input file is already present, valid, fully written, and located at a given path. It does not handle:</p>
+    <p>1. <strong>File readiness</strong>: Knowing whether a producer has finished uploading a file over FTP or a network share.</p>
+    <p>2. <strong>Pre-flight validation</strong>: Checking filename conventions before spinning up database transactions and <code>JobExecution</code> audit logs.</p>
+    <p>3. <strong>File lifecycle management</strong>: Moving successful files to an archive directory or isolating failed files into a quarantine directory.</p>
+
+    <p>Rather than writing ad-hoc shell scripts or error-prone <code>@Scheduled</code> methods, the <code>adapter</code> module uses <strong>Spring Integration</strong> to build a robust file ingestion and lifecycle pipeline around Spring Batch.</p>
+
+    <p>---</p>
+
+    <h2>1. Safe File Polling with a Two-Phase Signal Handshake (<code>.GO</code>)</h2>
+
+    <p>Reading a file while it is still being written causes silent data truncation, parsing exceptions, or corrupted records.</p>
+
+    <p>To prevent this, the <code>adapter</code> module adopts a <strong>signal file handshake</strong>:</p>
+    <p>1. The upstream producer writes <code>data-file-100.txt</code>.</p>
+    <p>2. Once write operations are complete, the producer creates an empty signal file: <code>data-file-100.txt.GO</code>.</p>
+    <p>3. Spring Integration&#39;s inbound channel adapter polls <strong>only</strong> for <code>*.GO</code> files:</p>
+
+    <div class="code-wrapper">
+      <div class="code-header"><span class="code-lang">XML</span></div>
+      <pre><code>&lt;!-- adapter/src/main/resources/integration-context.xml --&gt;
+&lt;<span class="hl-keyword">int</span>-file:inbound-channel-adapter id=<span class="hl-string">&quot;filePoller&quot;</span>
+                                  channel=<span class="hl-string">&quot;signalFileChannel&quot;</span>
+                                  directory=<span class="hl-string">&quot;file:${flow.inputDirectory:app-input}&quot;</span>
+                                  prevent-duplicates=<span class="hl-string">&quot;false&quot;</span>
+                                  filename-pattern=<span class="hl-string">&quot;*.GO&quot;</span>&gt;
+    &lt;<span class="hl-keyword">int</span>:poller fixed-rate=<span class="hl-string">&quot;${flow.pollingFrequency:4000}&quot;</span>/&gt;
+&lt;/<span class="hl-keyword">int</span>-file:inbound-channel-adapter&gt;
+</code></pre>
+    </div>
+
+
+    <p>When a <code>.GO</code> signal arrives, the flow checks whether the actual companion data file is present:</p>
+
+    <div class="code-wrapper">
+      <div class="code-header"><span class="code-lang">JAVA</span></div>
+      <pre><code>// adapter/src/main/java/play/with/integration/flow/filter/NoInputFileSignalFileFilter.java
+<span class="hl-keyword">public</span> <span class="hl-keyword">class</span> NoInputFileSignalFileFilter {
+    <span class="hl-keyword">public</span> <span class="hl-keyword">boolean</span> filter(File signalFile) <span class="hl-keyword">throws</span> IOException {
+        <span class="hl-keyword">String</span> signalFilePath = signalFile.getAbsolutePath();
+        <span class="hl-keyword">String</span> inputFilePath = signalFilePath.substring(0, signalFilePath.indexOf(<span class="hl-string">&quot;.GO&quot;</span>));
+        File inputFile = <span class="hl-keyword">new</span> File(inputFilePath);
+        <span class="hl-keyword">if</span> (inputFile.exists()) {
+            <span class="hl-keyword">return</span> true;
+        } <span class="hl-keyword">else</span> {
+            forceDelete(signalFile);
+            <span class="hl-keyword">return</span> false;
+        }
+    }
+}
+</code></pre>
+    </div>
+
+
+    <p>Once confirmed, <code>SignalToInputFileTransformer</code> deletes the <code>.GO</code> signal file and forwards the actual data <code>File</code> down the message channel:</p>
+
+    <div class="code-wrapper">
+      <div class="code-header"><span class="code-lang">JAVA</span></div>
+      <pre><code>// adapter/src/main/java/play/with/integration/flow/transformer/SignalToInputFileTransformer.java
+<span class="hl-keyword">public</span> <span class="hl-keyword">class</span> SignalToInputFileTransformer {
+    <span class="hl-keyword">public</span> File transform(File signalFile) <span class="hl-keyword">throws</span> IOException {
+        <span class="hl-keyword">String</span> signalFilePath = signalFile.getAbsolutePath();
+        <span class="hl-keyword">String</span> inputFilePath = signalFilePath.substring(0, signalFilePath.indexOf(<span class="hl-string">&quot;.GO&quot;</span>));
+        forceDelete(signalFile);
+        <span class="hl-keyword">return</span> <span class="hl-keyword">new</span> File(inputFilePath);
+    }
+}
+</code></pre>
+    </div>
+
+
+    <p>This guarantees that Spring Batch never attempts to process an incomplete file.</p>
+
+    <p>---</p>
+
+    <h2>2. Pre-Execution Validation: Keeping <code>JobRepository</code> Clean</h2>
+
+    <p>If a file has an invalid naming convention or format, launching a Spring Batch job creates immediate <code>FAILED</code> entries in <code>BATCH_JOB_EXECUTION</code> and <code>BATCH_STEP_EXECUTION</code> tables. This pollutes operational monitoring and inflates failure counts.</p>
+
+    <p>Spring Integration places a filter right before batch submission:</p>
+
+    <div class="code-wrapper">
+      <div class="code-header"><span class="code-lang">XML</span></div>
+      <pre><code>&lt;!-- adapter/src/main/resources/integration-context.xml --&gt;
+&lt;<span class="hl-keyword">int</span>:filter input-channel=<span class="hl-string">&quot;inboundFileChannel&quot;</span> 
+            output-channel=<span class="hl-string">&quot;filteredFilesChannel&quot;</span>
+            discard-channel=<span class="hl-string">&quot;rejectedFilesChannel&quot;</span>&gt;
+    &lt;bean <span class="hl-keyword">class</span>=<span class="hl-string">&quot;play.with.integration.flow.filter.FileValidator&quot;</span>&gt;
+        &lt;property name=<span class="hl-string">&quot;invalidFilenamePattern&quot;</span> value=<span class="hl-string">&quot;${flow.invalidFilenamePattern:app-data}&quot;</span>/&gt;
+    &lt;/bean&gt;
+&lt;/<span class="hl-keyword">int</span>:filter&gt;
+
+&lt;<span class="hl-keyword">int</span>-file:outbound-channel-adapter id=<span class="hl-string">&quot;filteredFileProcessor&quot;</span> 
+                                   channel=<span class="hl-string">&quot;rejectedFilesChannel&quot;</span>
+                                   delete-source-files=<span class="hl-string">&quot;true&quot;</span>
+                                   directory=<span class="hl-string">&quot;file:${flow.invalidDirectory:app-invalid}&quot;</span>/&gt;
+</code></pre>
+    </div>
+
+
+    <p>Invalid files are discarded directly into <code>app-invalid/</code>. Because the batch engine is never invoked for bad files, the database execution history remains pristine.</p>
+
+    <p>---</p>
+
+    <h2>3. The <code>JobLaunchingGateway</code>: Bridging Messages to Batch Jobs</h2>
+
+    <p>Once a file is validated, it must be converted into a batch job trigger.</p>
+
+    <p>In Spring Integration, <code>JobRequestHelper</code> transforms the inbound <code>File</code> into a <code>JobLaunchRequest</code>, dynamically injecting parameters:</p>
+    <ul class="md-ul">
+      <li class="md-li"><code>input.file.name</code>: the absolute path to the data file, consumed by Spring Batch&#39;s <code>@StepScope</code> reader.</li>
+      <li class="md-li"><code>run.id</code>: a current timestamp ensuring each job run has unique parameters for restartability.</li>
+    </ul>
+
+    <div class="code-wrapper">
+      <div class="code-header"><span class="code-lang">JAVA</span></div>
+      <pre><code>// adapter/src/main/java/play/with/integration/flow/config/JobRequestHelper.java
+<span class="hl-keyword">public</span> <span class="hl-keyword">class</span> JobRequestHelper {
+    <span class="hl-keyword">private</span> Job job;
+    <span class="hl-keyword">private</span> <span class="hl-keyword">String</span> fileParameterName;
+
+    <span <span class="hl-keyword">class</span>="hl-annotation">@Transformer</span>
+    <span class="hl-keyword">public</span> JobLaunchRequest toRequest(File inputFile) {
+        JobParametersBuilder jobParametersBuilder = <span class="hl-keyword">new</span> JobParametersBuilder();
+        jobParametersBuilder.addString(fileParameterName, inputFile.getAbsolutePath());
+        jobParametersBuilder.addLong(<span class="hl-string">&quot;run.id&quot;</span>, System.currentTimeMillis());
+        <span class="hl-keyword">return</span> <span class="hl-keyword">new</span> JobLaunchRequest(job, jobParametersBuilder.toJobParameters());
+    }
+}
+</code></pre>
+    </div>
+
+
+    <p>The <code>JobLaunchRequest</code> is dispatched to the <code>&lt;batch-int:job-launching-gateway&gt;</code>:</p>
+
+    <div class="code-wrapper">
+      <div class="code-header"><span class="code-lang">XML</span></div>
+      <pre><code>&lt;!-- adapter/src/main/resources/integration-context.xml --&gt;
+&lt;batch-<span class="hl-keyword">int</span>:job-launching-gateway request-channel=<span class="hl-string">&quot;jobRequestChannel&quot;</span> 
+                                reply-channel=<span class="hl-string">&quot;jobReplyChannel&quot;</span>/&gt;
+</code></pre>
+    </div>
+
+
+    <p>The gateway handles the handoff to the Spring Batch <code>JobLauncher</code>, runs the chunk pipeline, and outputs the resulting <code>JobExecution</code> message payload onto <code>jobReplyChannel</code>.</p>
+
+    <p>---</p>
+
+    <h2>4. Post-Execution Routing &amp; File Lifecycle Management</h2>
+
+    <p>When the batch job completes or encounters an error, the input file still sits in <code>app-input/</code>. What should happen to it?</p>
+
+    <p>Rather than coupling file movement logic inside Spring Batch listeners or writers, the adapter flow uses a <strong>Status-Based Router</strong>:</p>
+
+    <div class="code-wrapper">
+      <div class="code-header"><span class="code-lang">JAVA</span></div>
+      <pre><code>// adapter/src/main/java/play/with/integration/flow/router/JobStatusBasedRouter.java
+<span class="hl-keyword">public</span> <span class="hl-keyword">class</span> JobStatusBasedRouter {
+    <span class="hl-keyword">public</span> <span class="hl-keyword">String</span> transform(JobExecution jobExecution) {
+        <span class="hl-keyword">if</span> (jobExecution.getStatus() == BatchStatus.COMPLETED) {
+            <span class="hl-keyword">return</span> <span class="hl-string">&quot;completedJobChannel&quot;</span>;
+        }
+        <span class="hl-keyword">return</span> <span class="hl-string">&quot;unCompletedJobChannel&quot;</span>;
+    }
+}
+</code></pre>
+    </div>
+
+
+    <p>Each destination channel transforms the <code>JobExecution</code> back into the original file reference and invokes dedicated outbound file adapters:</p>
+
+    <div class="code-wrapper">
+      <div class="code-header"><span class="code-lang">XML</span></div>
+      <pre><code>&lt;!-- adapter/src/main/resources/integration-context.xml --&gt;
+&lt;<span class="hl-keyword">int</span>:transformer input-channel=<span class="hl-string">&quot;completedJobChannel&quot;</span> output-channel=<span class="hl-string">&quot;completedFileChannel&quot;</span>&gt;
+    &lt;bean <span class="hl-keyword">class</span>=<span class="hl-string">&quot;play.with.integration.flow.transformer.JobToFileTransformer&quot;</span>/&gt;
+&lt;/<span class="hl-keyword">int</span>:transformer&gt;
+
+&lt;<span class="hl-keyword">int</span>:transformer input-channel=<span class="hl-string">&quot;unCompletedJobChannel&quot;</span> output-channel=<span class="hl-string">&quot;unCompletedFileChannel&quot;</span>&gt;
+    &lt;bean <span class="hl-keyword">class</span>=<span class="hl-string">&quot;play.with.integration.flow.transformer.JobToFileTransformer&quot;</span>/&gt;
+&lt;/<span class="hl-keyword">int</span>:transformer&gt;
+
+&lt;<span class="hl-keyword">int</span>-file:outbound-channel-adapter id=<span class="hl-string">&quot;completedJobProcessor&quot;</span> 
+                                   channel=<span class="hl-string">&quot;completedFileChannel&quot;</span>
+                                   delete-source-files=<span class="hl-string">&quot;true&quot;</span>
+                                   directory=<span class="hl-string">&quot;file:${flow.processedDirectory:app-processed}&quot;</span>/&gt;
+
+&lt;<span class="hl-keyword">int</span>-file:outbound-channel-adapter id=<span class="hl-string">&quot;unCompletedJobProcessor&quot;</span> 
+                                   channel=<span class="hl-string">&quot;unCompletedFileChannel&quot;</span>
+                                   delete-source-files=<span class="hl-string">&quot;true&quot;</span>
+                                   directory=<span class="hl-string">&quot;file:${flow.failedDirectory:app-failed}&quot;</span>/&gt;
+</code></pre>
+    </div>
+
+
+    <p>With <code>delete-source-files=&quot;true&quot;</code>:</p>
+    <ul class="md-ul">
+      <li class="md-li"><strong>Completed jobs</strong>: The data file is moved to <code>app-processed/</code>.</li>
+      <li class="md-li"><strong>Failed jobs</strong>: The data file is moved to <code>app-failed/</code> for operational inspection.</li>
+    </ul>
+
+    <p>---</p>
+
+    <h2>Conclusion</h2>
+
+    <p>By combining Spring Integration and Spring Batch in the <code>adapter</code> module, each framework focuses on what it does best:</p>
+    <ul class="md-ul">
+      <li class="md-li"><strong>Spring Integration</strong> manages the file system: polling directories, validating file handshakes, filtering bad inputs, and archiving files post-execution.</li>
+      <li class="md-li"><strong>Spring Batch</strong> manages data processing: streaming records, executing chunk-based REST calls, committing transactions, and recording state checkpoints.</li>
+    </ul>
+
+    <p>This clean separation of concerns creates a resilient, production-ready file processing pipeline.</p>
+    <div class="callout callout-takeaways">
+      <div class="callout-header">🚀 Key Takeaways</div>
+      <ul class="takeaways-list">
+        <li>Eliminate partial-read race conditions: Polling for companion signal files (*.GO) ensures large files are completely written before the batch job starts.</li>
+        <li>Filter corrupt files before batch submission: Discarding invalid files prior to launching avoids creating unnecessary JobExecution and StepExecution records in the database.</li>
+        <li>Bridge file flows to batch jobs seamlessly: Use JobLaunchingGateway and JobRequestHelper to dynamically inject file paths and unique run timestamps into JobParameters.</li>
+        <li>Automate post-batch file movement: Route files based on JobExecution status to processed or failed directories without custom shell scripts or manual steps.</li>
+      </ul>
+    </div>
+
+  </article>
+
+  <footer>
+    <div class="footer-container">
+      <p>Generated by <strong>Blogify</strong> • Zero runtime dependencies • Ready for GitHub Pages</p>
+      <p class="footer-ai-note">AI Discoverability enabled: <a href="llms.txt">llms.txt</a> &bull; <a href="llms-full.txt">llms-full.txt</a></p>
+    </div>
+  </footer>
+  <script>
+    function switchBlogTheme(theme) {
+      document.documentElement.setAttribute('data-theme', theme);
+      localStorage.setItem('blogify-theme', theme);
+    }
+    function toggleColorMode() {
+      var cur = document.documentElement.getAttribute('data-mode') || 'light';
+      var next = cur === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-mode', next);
+      localStorage.setItem('blogify-mode', next);
+    }
+    document.addEventListener('DOMContentLoaded', function() {
+      var curTheme = document.documentElement.getAttribute('data-theme') || 'primer';
+      var sel = document.getElementById('theme-select');
+      if (sel) sel.value = curTheme;
+
+      // Auto-playing Carousel Controller
+      document.querySelectorAll('.carousel-container').forEach(function(carousel) {
+        var slides = carousel.querySelectorAll('.carousel-slide');
+        var dots = carousel.querySelectorAll('.carousel-dot');
+        var prevBtn = carousel.querySelector('.carousel-prev');
+        var nextBtn = carousel.querySelector('.carousel-next');
+        if (slides.length <= 1) {
+          if (prevBtn) prevBtn.style.display = 'none';
+          if (nextBtn) nextBtn.style.display = 'none';
+          var dotsWrap = carousel.querySelector('.carousel-dots');
+          if (dotsWrap) dotsWrap.style.display = 'none';
+          return;
+        }
+        var curIdx = 0;
+        var autoplayInterval = parseInt(carousel.getAttribute('data-autoplay') || '4000', 10);
+        var timer = null;
+
+        function showSlide(idx) {
+          if (idx < 0) idx = slides.length - 1;
+          if (idx >= slides.length) idx = 0;
+          curIdx = idx;
+          slides.forEach(function(s, i) {
+            if (i === curIdx) {
+              s.classList.add('active');
+            } else {
+              s.classList.remove('active');
+            }
+          });
+          dots.forEach(function(d, i) {
+            if (i === curIdx) {
+              d.classList.add('active');
+            } else {
+              d.classList.remove('active');
+            }
+          });
+        }
+
+        function startTimer() {
+          if (autoplayInterval > 0 && !timer) {
+            timer = setInterval(function() {
+              showSlide(curIdx + 1);
+            }, autoplayInterval);
+          }
+        }
+
+        function stopTimer() {
+          if (timer) {
+            clearInterval(timer);
+            timer = null;
+          }
+        }
+
+        if (prevBtn) {
+          prevBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            showSlide(curIdx - 1);
+          });
+        }
+
+        if (nextBtn) {
+          nextBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            showSlide(curIdx + 1);
+          });
+        }
+
+        dots.forEach(function(dot) {
+          dot.addEventListener('click', function(e) {
+            e.preventDefault();
+            var i = parseInt(dot.getAttribute('data-index'), 10);
+            showSlide(i);
+          });
+        });
+
+        carousel.addEventListener('mouseenter', stopTimer);
+        carousel.addEventListener('mouseleave', startTimer);
+        carousel.addEventListener('touchstart', stopTimer, { passive: true });
+        carousel.addEventListener('touchend', startTimer, { passive: true });
+
+        startTimer();
+      });
+    });
+  </script>
+</body>
+</html>
